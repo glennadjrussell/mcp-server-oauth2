@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # Keycloak - The Authentication Server 🔑
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    command: start-dev
+    environment:
+      # These are the admin credentials for Keycloak itself
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    networks:
+      - mcp-net
+
+  # Our FastAPI Application - The Resource Server 🚀
+  api:
+    build: .
+    container_name: mcp-api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - keycloak
+    environment:
+      # These variables are passed to our Python app
+      KEYCLOAK_URL: http://keycloak:8080/
+      REALM_NAME: mcp-realm
+      CLIENT_ID: mcp-client
+    networks:
+      - mcp-net
+
+networks:
+  mcp-net:
+    driver: bridge
